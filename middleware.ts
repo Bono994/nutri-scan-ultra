@@ -1,20 +1,22 @@
 import { NextResponse } from \'next/server\'
 import type { NextRequest } from \'next/server\'
-export function middleware(request: NextRequest) {
-  const url = request.nextUrl
-  if (url.pathname.startsWith(\'/_next\') || url.pathname.startsWith(\'/login\') || url.pathname.includes(\'favicon\')) {
+export function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname
+  if (pathname.startsWith(\'/_next\') || pathname.startsWith(\'/api\') || pathname === \'/login\' || pathname.includes(\'.\')) {
     return NextResponse.next()
   }
-  const pwd = url.searchParams.get(\'pwd\')
-  const cookie = request.cookies.get(\'nutri_auth\')?.value
+  const pwd = req.nextUrl.searchParams.get(\'pwd\')
   if (pwd === \'nutri2025\') {
-    const res = NextResponse.redirect(new URL(\'/\', request.url))
-    res.cookies.set(\'nutri_auth\', \'nutri2025\', { maxAge: 2592000, path: \'/\' })
+    const res = NextResponse.redirect(new URL(\'/\', req.url))
+    res.cookies.set(\'nutri_auth\', \'nutri2025\', { path: \'/\', maxAge: 2592000 })
     return res
   }
+  const cookie = req.cookies.get(\'nutri_auth\')?.value
   if (cookie === \'nutri2025\') {
     return NextResponse.next()
   }
-  return NextResponse.redirect(new URL(\'/login\', request.url))
+  return NextResponse.redirect(new URL(\'/login\', req.url))
 }
-export const config = { matcher: \'/:path*\' }
+export const config = {
+  matcher: [\'/((?!_next/static|_next/image|favicon.ico).*)\'],
+}
